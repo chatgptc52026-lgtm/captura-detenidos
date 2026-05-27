@@ -1,0 +1,299 @@
+
+    :root{
+      --navy:#0b2d4d;
+      --teal:#008b83;
+      --gold:#d4aa00;
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --line:#d7dde7;
+      --ink:#0f172a;
+      --mut:#64748b;
+      --danger:#b91c1c;
+      --shadow:0 10px 30px rgba(2,6,23,.06);
+    }
+    *{ box-sizing:border-box; font-family:system-ui,Segoe UI,Roboto,Arial; }
+    body{ margin:0; background:var(--bg); color:var(--ink); }
+
+    /* 🔒 SOLO PC */
+    html, body{ min-width:1280px; overflow-x:auto; }
+
+    header{
+      background:var(--navy);
+      color:#fff;
+      padding:14px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      position:sticky;
+      top:0;
+      z-index:10;
+    }
+    header .title{ font-weight:900; letter-spacing:.3px; }
+    header .sub{ font-size:12px; opacity:.9; }
+
+    .wrap{
+      max-width:1750px;
+      min-width:1280px;
+      margin:16px auto 28px;
+      padding:0 14px;
+      display:grid;
+      grid-template-columns: 1.2fr .8fr; /* formulario + panel derecha */
+      gap:14px;
+      align-items:start;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:14px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .card-h{
+      padding:12px 14px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background:linear-gradient(180deg,#fff,rgba(245,247,251,.6));
+    }
+    .card-h .h{
+      font-weight:900;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .badge{
+      font-size:12px;
+      padding:4px 8px;
+      border-radius:999px;
+      background:rgba(0,139,131,.12);
+      color:var(--teal);
+      border:1px solid rgba(0,139,131,.25);
+      font-weight:800;
+      white-space:nowrap;
+    }
+
+    form{ padding:14px; }
+
+    /* ✅ GRID DE 5 EN 5 */
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap:10px;
+    }
+
+    .f{ display:flex; flex-direction:column; gap:6px; }
+    label{
+      font-size:12px;
+      color:var(--mut);
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+    input, select, textarea{
+      width:100%;
+      padding:10px 10px;
+      border:1px solid var(--line);
+      border-radius:10px;
+      outline:none;
+      background:#fff;
+      color:var(--ink);
+      font-size:13px;
+    }
+    textarea{ min-height:92px; resize:vertical; }
+
+    input:focus, select:focus, textarea:focus{
+      background:#f0fdfa;
+      border-color:#0d9488;
+      box-shadow:0 0 0 2px rgba(13,148,136,.25);
+    }
+
+    /* Helpers para spans */
+    .span2{ grid-column: span 2; }
+    .span3{ grid-column: span 3; }
+    .span4{ grid-column: span 4; }
+    .span5{ grid-column: span 5; }
+
+    .actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      padding:12px 14px;
+      border-top:1px solid var(--line);
+      background:linear-gradient(180deg,#fff,rgba(245,247,251,.55));
+    }
+    .btn{
+      border:none;
+      border-radius:12px;
+      padding:10px 12px;
+      font-weight:900;
+      font-size:13px;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      transition:.12s transform ease;
+    }
+    .btn:active{ transform:translateY(1px); }
+    .btn-primary{ background:var(--teal); color:#fff; }
+    .btn-dark{ background:var(--navy); color:#fff; }
+    .btn-ghost{ background:#fff; color:var(--ink); border:1px solid var(--line); }
+    .btn-danger{ background:var(--danger); color:#fff; }
+    .btn-warn{ background:var(--gold); color:#102a43; }
+
+    .note{
+      padding:10px 14px;
+      font-size:12px;
+      color:var(--mut);
+      border-top:1px dashed var(--line);
+    }
+
+    /* Panel derecho (Chat + Listado) */
+    .rightcol{
+      display:grid;
+      gap:14px;
+    }
+
+    /* Tabla */
+    .tablewrap{ padding:10px 14px 14px; overflow:auto; }
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      min-width:1100px;
+      font-size:12px;
+    }
+    th, td{
+      padding:9px 8px;
+      border-bottom:1px solid var(--line);
+      vertical-align:top;
+      white-space:nowrap;
+    }
+    th{
+      position:sticky;
+      top:0;
+      background:#fff;
+      z-index:1;
+      text-align:left;
+      font-weight:900;
+      color:#0f172a;
+      border-bottom:2px solid var(--line);
+    }
+    td.wraptext{ white-space:normal; min-width:260px; }
+
+    .mini-actions{
+      display:flex;
+      gap:6px;
+      align-items:center;
+      justify-content:flex-end;
+    }
+    .linkbtn{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius:10px;
+      padding:6px 8px;
+      font-weight:900;
+      cursor:pointer;
+    }
+    .linkbtn.danger{ border-color:rgba(185,28,28,.35); color:var(--danger); }
+    .linkbtn.dark{ border-color:rgba(11,45,77,.25); color:var(--navy); }
+
+    .footerbar{
+      padding:10px 14px;
+      border-top:1px solid var(--line);
+      font-size:12px;
+      color:var(--mut);
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      background:linear-gradient(180deg,rgba(245,247,251,.6),#fff);
+    }
+    .kpi{ display:flex; gap:10px; align-items:center; }
+    .kpi b{ color:var(--ink); }
+
+    /* ===================== CHATBOT ===================== */
+    .chatbox{
+      display:flex;
+      flex-direction:column;
+      height:520px;
+    }
+    .chatlog{
+      padding:12px 14px;
+      overflow:auto;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      background:linear-gradient(180deg,rgba(245,247,251,.6),#fff);
+    }
+    .msg{
+      max-width:92%;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      box-shadow:0 6px 18px rgba(2,6,23,.04);
+      font-size:13px;
+      white-space:pre-wrap;
+    }
+    .msg.user{
+      margin-left:auto;
+      background:#fff;
+      border-color:rgba(0,139,131,.25);
+    }
+    .msg.bot{
+      margin-right:auto;
+      background:#ffffff;
+      border-color:rgba(11,45,77,.2);
+    }
+    .chatbar{
+      display:flex;
+      gap:8px;
+      padding:10px 12px;
+      border-top:1px solid var(--line);
+      background:#fff;
+    }
+    .chatbar input{
+      flex:1;
+      border-radius:12px;
+    }
+/* ✅ FIX: que el módulo ocupe TODO el ancho del grid (5 columnas) */
+.module{
+  grid-column: 1 / -1;     /* ocupa de la 1 a la última columna */
+  display: none;           /* oculto por defecto */
+}
+
+/* ✅ Cuando está activo, se convierte en una grid de 5 columnas */
+.module.active{
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;               /* ajusta si tu CSS usa otro gap */
+  width: 100%;
+}
+
+/* ===================== MAPA (REEMPLAZA CHAT) ===================== */
+.mapbox{
+  display:flex;
+  flex-direction:column;
+  height:520px;
+}
+#map{
+  flex:1;
+  width:100%;
+  border-radius:12px;
+  overflow:hidden;
+}
+
+.mapbar{
+  display:flex;
+  gap:8px;
+  padding:10px 12px;
+  border-bottom:1px solid var(--line);
+  background:#fff;
+}
+.mapbar input{
+  flex:1;
+  border-radius:12px;
+}
+

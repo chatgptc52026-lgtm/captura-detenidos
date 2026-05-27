@@ -1,0 +1,1955 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SSC / C5 – Registro IPH</title>
+
+  <!-- SheetJS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- KML -->
+  <script src="https://unpkg.com/leaflet-omnivore/leaflet-omnivore.min.js"></script>
+
+  <!-- Exportar mapa -->
+  <script src="https://unpkg.com/leaflet-image@0.4.0/leaflet-image.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+
+  <link rel="stylesheet" href="Estilo.css">
+
+  <style>
+    .tablewrap{ max-width:100%; overflow-x:auto; }
+    .tabla-registros{ width:100%; table-layout:fixed; border-collapse:collapse; }
+    .tabla-registros th, .tabla-registros td{
+      padding:10px 12px; border-bottom:1px solid #e5e7eb;
+      vertical-align:top; overflow:hidden; word-break:break-word;
+      white-space:nowrap; text-overflow:ellipsis;
+    }
+    .tabla-registros td.col-obs{
+      white-space:normal; text-overflow:clip;
+      display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3;
+      overflow:hidden;
+    }
+    .tabla-registros th:nth-child(1){ width:36px; }
+    .tabla-registros th:nth-child(2){ width:130px; }
+    .tabla-registros th:nth-child(3){ width:140px; }
+    .tabla-registros th:nth-child(4){ width:120px; }
+    .tabla-registros th:nth-child(5){ width:110px; }
+    .tabla-registros th:nth-child(6){ width:260px; }
+    .tabla-registros th:nth-child(7){ width:140px; }
+    .tabla-registros th:nth-child(8){ width:140px; }
+    .tabla-registros th:nth-child(9){ width:420px; }
+    .tabla-registros th:nth-child(10){ width:190px; }
+
+    .mini-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+    .linkbtn{
+      border:1px solid #d1d5db; background:#fff; padding:6px 10px;
+      border-radius:10px; cursor:pointer; font-weight:700;
+    }
+    .linkbtn.dark{ border-color:#111827; }
+    .linkbtn.danger{ border-color:#ef4444; color:#b91c1c; }
+
+    .logo_cancun {width: 70px; margin: auto 50px;}
+    .row {
+      display: grid;
+      grid-template: "col1 col2 ";
+      width:auto;
+      align-items: center;
+      justify-items: center;
+      grid-gap: 10px;
+    }
+    .col1 { grid-area: col1; }
+    .col2 { grid-area: col2; width: auto; }
+    header  { height:100px; }
+
+    .mapbox{
+      display:flex;
+      flex-direction:column;
+      height:520px;
+    }
+    #map{
+      flex:1;
+      width:100%;
+      min-height:360px;
+    }
+    .mapbar{
+      display:flex;
+      gap:8px;
+      padding:10px 12px;
+      border-top:1px solid var(--line);
+      background:#fff;
+    }
+    .mapbar input{
+      flex:1;
+      border-radius:12px;
+      padding:10px 10px;
+      border:1px solid var(--line);
+      outline:none;
+      font-size:13px;
+    }
+    .mapbar input:focus{
+      background:#f0fdfa;
+      border-color:#0d9488;
+      box-shadow:0 0 0 2px rgba(13,148,136,.25);
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="row">
+    <div class="col1">
+      <img class="logo_cancun" src="quintanaroo.png" alt="No carga">
+    </div>
+    <div class="col2">
+      <div class="title">DEPARTAMENTO DE ESTADISTICAS / C5 – Registro (IPH DETENIDOS)</div>
+      <div class="sub">Observaciones</div>
+    </div>
+  </div>
+  <div class="badge" id="statusBadge">Listo</div>
+</header>
+
+<div class="wrap">
+
+  <section class="card">
+    <div class="card-h">
+      <div class="h">Formulario de Captura <span class="badge">IPH</span></div>
+      <div class="badge" id="countBadge">Registros: 0</div>
+    </div>
+
+    <form id="formIPH" autocomplete="off" method="POST" enctype="multipart/form-data">
+      <div class="grid">
+
+        <div class="f span5">
+          <label>IMÁGENES (PNG / JPG / JPEG) para la presentación</label>
+          <div style="display:grid; grid-template-columns:repeat(4,minmax(140px,1fr)); gap:10px;">
+            <div>
+              <small>Imagen 1</small>
+              <input type="file" name="imagenes[]" accept="image/png,image/jpeg" />
+            </div>
+            <div>
+              <small>Imagen 2</small>
+              <input type="file" name="imagenes[]" accept="image/png,image/jpeg" />
+            </div>
+            <div>
+              <small>Imagen 3</small>
+              <input type="file" name="imagenes[]" accept="image/png,image/jpeg" />
+            </div>
+            <div>
+              <small>Imagen 4</small>
+              <input type="file" name="imagenes[]" accept="image/png,image/jpeg" />
+            </div>
+          </div>
+          <small style="opacity:.8; display:block; margin-top:6px;">
+            Nota: estas imágenes se envían al servidor (PHP) para incrustarlas en el PPTX.
+          </small>
+        </div>
+
+        <div class="f span2">
+          <label>BASE DE COLONIAS / SECTORES</label>
+          <input type="file" id="excelSectores" accept=".xlsx,.xls,.csv" />
+          <small style="opacity:.8; display:block; margin-top:6px;">
+            La base se carga automáticamente desde: <b>data/data_colonias_sectores.xlsx</b>
+          </small>
+        </div>
+
+        <div class="f">
+          <label>FOLIO IPH</label>
+          <input name="folio_iph" placeholder="Ej. IPH-2026-0001" required />
+        </div>
+
+        <div class="f">
+          <label>MUNICIPIO</label>
+          <select name="municipio" id="municipio" required>
+            <option value="" selected disabled>Selecciona…</option>
+          </select>
+        </div>
+
+        <div class="f">
+          <label>ID</label>
+          <select name="id_operativo" required>
+            <option value="" selected disabled>Selecciona…</option>
+          </select>
+        </div>
+
+        <div class="f">
+          <label>FECHA</label>
+          <input type="date" name="fecha" required />
+        </div>
+
+        <div class="f">
+          <label>HORA</label>
+          <input type="time" name="hora" required />
+        </div>
+
+        <div class="f">
+          <label>SECTOR</label>
+          <input name="sector" id="sector" placeholder="Ej. 1, 2, 3, 4, 5, sin sector" />
+        </div>
+
+        <div class="f"><label>TURNO</label><input name="turno" /></div>
+        <div class="f"><label>UNIDAD</label><input name="unidad" placeholder="Numero de la unidad"/></div>
+
+        <div class="f span2">
+          <label>DIRECCIÓN</label>
+          <input name="direccion" id="direccion" placeholder="Calle / SM / MZA / LTE / No." />
+        </div>
+
+        <div class="f"><label>COLONIA</label><input name="colonia" id="colonia" /></div>
+
+        <div class="f">
+          <label>LATITUD</label>
+          <input name="lat" id="lat" placeholder="Ej. 21.161900" readonly />
+        </div>
+
+        <div class="f">
+          <label>LONGITUD</label>
+          <input name="lon" id="lon" placeholder="Ej. -86.851500" readonly />
+        </div>
+
+        <div class="f span2">
+          <label>NOMBRE DEL OPERATIVO</label>
+          <select name="nombre_operativo" required>
+            <option value="" selected disabled>Selecciona…</option>
+          </select>
+        </div>
+
+        <div class="f span2">
+          <label>PRIMER RESPONDIENTE (NOMBRES APELLIDOS)</label>
+          <input name="primer_respondiente" />
+        </div>
+
+        <div class="f span2">
+          <label>HECHO</label>
+          <select name="hecho" required>
+            <option value="" selected disabled>Selecciona…</option>
+          </select>
+        </div>
+
+        <div class="f"><label>CARPETA DE INVESTIGACIÓN</label><input name="carpeta_investigacion" placeholder="Ej. FGE/QROO/BJ/01/368/2026"/></div>
+        <div class="f"><label>POLICÍAS ADICIONALES</label><input name="policias_adicionales" type="number" min="0" step="1" /></div>
+        <div class="f"><label>PERSONAS DETENIDAS</label><input name="personas_detenidas" type="number" min="0" step="1" placeholder="Ej. 1,2,3,4 etc"/></div>
+        <div class="f"><label>VEHÍCULOS ASEGURADOS</label><input name="vehiculos_asegurados" type="number" min="0" step="1" placeholder="Ej.1,2,3,4 etc"/></div>
+        <div class="f"><label>VEHÍCULOS INSPECCIONADOS</label><input name="vehiculos_inspec" type="number" min="0" step="1" placeholder="Ej.1,2,3,4 etc"/></div>
+        <div class="f"><label>ARMAS ASEGURADAS</label><input name="armas_aseguradas" type="number" min="0" step="1" placeholder="Ej.1,2,3,4 etc"/></div>
+        <div class="f"><label>DROGA ASEGURADA GRAMOS</label><input name="droga_asegurada" type="number" min="0" step="1" placeholder="Ej.1 gm, 2 gm ,3 gm, 4gm, etc" /></div>
+
+        <div class="f">
+          <label>USO DE LA FUERZA</label>
+          <select name="uso_fuerza">
+            <option value="">Selecciona…</option>
+            <option>REDUCCION FISICA DE MOVIMIENTOS</option>
+            <option>UTILIZACION DE ARMAS INCAPACITANTES MENOS LETALES</option>
+            <option>UTILIZACION DE ARMAS DE FUEGO O FUERZA LETAL</option>
+          </select>
+        </div>
+
+        <div class="f span5">
+          <label>OBSERVACIONES O NARRATIVAS RND</label>
+          <textarea name="observaciones_rnd" placeholder="Narrativa / observaciones..."></textarea>
+        </div>
+
+        <div class="f"><label>RND</label><input name="rnd" placeholder="Ej. QR/FC/007/03012026/0009" /></div>
+
+        <div class="f">
+          <label>MUNICIPIO ASEGURAMIENTO</label>
+          <select name="municipio_aseguramiento" required>
+            <option value="" selected disabled>Selecciona…</option>
+          </select>
+        </div>
+
+        <div class="f"><label>ELEMENTO DE APOYO</label><input name="elemento_apoyo" /></div>
+
+        <div class="f span2">
+          <label>PRESENTADO A AUTORIDAD</label>
+          <select name="presentado_autoridad" required>
+            <option value="" selected disabled>Selecciona…</option>
+          </select>
+        </div>
+
+        <div class="f"><label>NOMBRE</label><input name="nombre" /></div>
+        <div class="f"><label>AP_PATERNO</label><input name="ap_paterno" /></div>
+        <div class="f"><label>AP_MATERNO</label><input name="ap_materno" /></div>
+        <div class="f"><label>ALIAS</label><input name="alias" /></div>
+
+        <div class="f">
+          <label>SEXO</label>
+          <select name="sexo">
+            <option value="">Selecciona…</option>
+            <option>HOMBRE</option>
+            <option>MUJER</option>
+            <option>NO ESPECIFICA</option>
+          </select>
+        </div>
+
+        <div class="f"><label>EDAD</label><input name="edad" type="number" min="0" step="1" /></div>
+        <div class="f"><label>ESTADO FÍSICO</label><input name="estado_fisico" placeholder="Ej. Borracho" /></div>
+
+        <div class="f span2"><label>DIRECCIÓN DETENIDO</label><input name="direccion_detenido" /></div>
+        <div class="f"><label>COLONIA DETENIDO</label><input name="colonia_detenido" placeholder="Ej. Lugar donde radica"/></div>
+        <div class="f"><label>MPIO DETENIDO</label><input name="mpio_detenido" placeholder="Ej. Mumicipo Radica" /></div>
+        <div class="f"><label>ESTADO DETENIDO</label><input name="estado_detenido" placeholder="Ej. Lugar Nacimiento"/></div>
+
+        <div class="f"><label>MOTIVO DETENCIÓN_1</label><input name="motivo_detencion_1" placeholder="Ej. Contra la salud"/></div>
+        <div class="f"><label>MOTIVO DETENCIÓN_2</label><input name="motivo_detencion_2" placeholder=" Ej. Armas prohibidas" /></div>
+        <div class="f"><label>MOTIVO DETENCIÓN_3</label><input name="motivo_detencion_3" placeholder="Ej. Encubrimiento"/></div>
+
+        <div class="f"><label>GRUPO DELICTIVO</label><input name="grupo_delictivo" /></div>
+        <div class="f"><label>VÍCTIMA</label><input name="victima" placeholder="Ej. Nombre Victima si aplica" /></div>
+        <div class="f"><label>N° VÍCTIMAS</label><input name="n_victimas" type="number" min="0" step="1" /></div>
+
+        <div class="f"><label>PAÍS ORIGEN</label><input name="pais_origen" /></div>
+        <div class="f"><label>ÚLTIMO GRADO</label><input name="ultimo_grado_estudios" /></div>
+        <div class="f"><label>OCUPACIÓN</label><input name="ocupacion" /></div>
+
+        <div class="f"><label>ASEGURAMIENTO 1</label><input name="aseguramiento_1" /></div>
+        <div class="f"><label>ASEGURAMIENTO 2</label><input name="aseguramiento_2" /></div>
+        <div class="f"><label>ASEGURAMIENTO 3</label><input name="aseguramiento_3" /></div>
+        <div class="f"><label>ASEGURAMIENTO 4</label><input name="aseguramiento_4" /></div>
+        <div class="f"><label>ASEGURAMIENTO 5</label><input name="aseguramiento_5" /></div>
+
+        <div class="f span5">
+          <label>DIRECCIÓN OCUPACIÓN</label>
+          <input name="direccion_ocupacion" />
+        </div>
+
+        <div class="f span5">
+          <label>DETENIDOS EXTRA (2–5) (opcional)</label>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <input name="detenido1" placeholder="Detenido 2 (Nombre completo)" />
+            <input name="alias1" placeholder="Alias 2" />
+            <input name="detenido2" placeholder="Detenido 3 (Nombre completo)" />
+            <input name="alias2" placeholder="Alias 3" />
+            <input name="detenido3" placeholder="Detenido 4 (Nombre completo)" />
+            <input name="alias3" placeholder="Alias 4" />
+            <input name="detenido4" placeholder="Detenido 5 (Nombre completo)" />
+            <input name="alias4" placeholder="Alias 5" />
+          </div>
+        </div>
+
+      </div>
+    </form>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="btnGuardar" type="button">💾 Guardar registro</button>
+      <button class="btn btn-danger" id="btnBorrarTodo" type="button">🗑️ Borrar TODO</button>
+      <span style="flex:1"></span>
+      <button class="btn btn-warn" id="btnCSV" type="button">⬇️ CSV</button>
+      <button class="btn btn-warn" id="btnXLSX" type="button">⬇️ XLSX</button>
+      <button type="button" class="btn btn-warn" id="btnPPTX">⬇️ PPTX</button>
+      <button type="button" class="btn btn-warn" id="btnZIP_PPTX">⬇️ ZIP PPTX</button>
+    </div>
+
+    <div class="note">
+      Tip: ENTER avanza al siguiente campo. Puedes marcar ubicación en el mapa (clic) y se guardan LAT/LON.
+    </div>
+  </section>
+
+  <div class="rightcol">
+    <section class="card mapbox">
+      <div class="card-h">
+        <div class="h">Mapa de Zona <span class="badge">Leaflet</span></div>
+        <div class="badge" id="mapMode">Sin marcar</div>
+      </div>
+
+      <div style="padding:10px 12px;">
+        <input id="addrInput" placeholder='Buscar: municipio / colonia / dirección o "lat, lon" (ej. 21.1619, -86.8515)' />
+        <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+          <button class="btn btn-dark" id="btnBuscarDir" type="button">Buscar</button>
+          <button class="btn btn-ghost" id="btnLimpiarMarker" type="button">Quitar marcador</button>
+          <button class="btn btn-warn" id="btnDescargarMapa" type="button">⬇️ Mapa PNG</button>
+        </div>
+        <small style="display:block; margin-top:6px; color:var(--mut);">
+          Tip: Puedes escribir “Cancún SM 55”, “Tulum Centro”, una dirección completa, o coordenadas “21.1619,-86.8515”.
+        </small>
+      </div>
+
+      <div id="map"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-h">
+        <div class="h">Registros guardados <span class="badge" id="storeKeyBadge">localStorage</span></div>
+        <div class="badge" id="lastSaved">Sin cambios</div>
+      </div>
+
+      <div class="tablewrap">
+        <table id="tabla" class="tabla-registros">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>FOLIO</th>
+              <th>MUNICIPIO</th>
+              <th>ID</th>
+              <th>FECHA</th>
+              <th>NOMBRE DETENIDO</th>
+              <th>RND</th>
+              <th>HECHO</th>
+              <th>OBSERVACIONES RND</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="footerbar">
+        <div class="kpi">Total: <b id="kpiTotal">0</b></div>
+        <div class="kpi">Clave: <b id="kpiKey"></b></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = "iph_registros_ssc_v1";
+const PPTX_ENDPOINT = "generar_pptx";
+const ZIP_ENDPOINT  = "generar_pptx_zip";
+
+const EXCEL_SECTORES_PATH = "data/data_colonias_sectores.xlsx";
+
+const MUNICIPIOS = [
+  "BENITO JUAREZ","PLAYA DEL CARMEN","TULUM","COZUMEL","ISLA MUJERES","LAZARO CARDENAS",
+  "OTHON P BLANCO","JOSE MARIA MORELOS","FELIPE CARRILLO PUERTO","PUERTO MORELOS","BACALAR"
+];
+
+const IDS = [
+  "PEP_BJ","PEP_PLAYA","PEP_TUL","PEP_COZ","PEP_OPB","PEP_CAMINOS","POLICIA RURAL","GPO_CENTURION","GPO_ORION","GPO_PDI","GPO_JAGUAR",
+  "MUN_FCP","MUN_LC","MUN_PLAYA","MUN_TUL","MUN_PM","MUN_JMM","MUN_IM","MUN_COZ","MUN_BJ","MUN_RURAL","MUN_BACALAR"
+];
+
+const OPERATIVOS = [
+  "CATEO","INTERINSTITUCIONAL","REPORTE 911","REPORTE CAMARA","REPORTE RADIO","REPORTE WHATSAPP",
+  "OBRA SEGURA","OPERATIVO PRADO CIELO","RECORRIDO DE PREVENCION Y VIGILANCIA","OPERATIVO K9"
+];
+
+const AUTORIDADES = [
+  "JUEZ CIVICO","JUEZ DE CONTROL","JUEZ CALIFICADOR","MINISTERIO PUBLICO ESTADO","MINISTERIO PUBLICO FEDERAL",
+  "FGE","FGR","INM","FIS_ESP_ADOLECENTES","FIS_ESP_EXTORSION","FIS_ESP_ANTICORRUPCION","FIS_ESP_ELECTORAL"
+];
+
+const HECHOS = [
+  "DENUNCIA","FLAGRANCIA","LOCALIZACION","MANDAMIENTO JUDICIAL",
+  "LLAMADA DE EMERGENCIA","DESCUBRIMIENTO","APORTACION"
+];
+
+const KML_MUNICIPIOS = {
+  "COZUMEL": "kml/23001_colonias_coz_2024.kml",
+  "FELIPE CARRILLO PUERTO": "kml/23002_colonias_fcp_2024.kml",
+  "ISLA MUJERES": "kml/23003_colonias_im_2024.kml",
+  "OTHON P BLANCO": "kml/23004_colonias_opb_2024.kml",
+  "BENITO JUAREZ": "kml/23005_colonias_bj_2024.kml",
+  "JOSE MARIA MORELOS": "kml/23006_colonias_jmm_2024.kml",
+  "LAZARO CARDENAS": "kml/23007_colonias_lc_2024.kml",
+  "PLAYA DEL CARMEN": "kml/23008_colonias_sol_2024.kml",
+  "TULUM": "kml/23009_colonias_tul_2024.kml",
+  "BACALAR": "kml/23010_colonias_bac_2024.kml",
+  "PUERTO MORELOS": "kml/23011_colonias_pm_2024.kml"
+};
+
+let BASE_SECTORES = [];
+let map = null;
+let marker = null;
+let capaColonias = null;
+
+const DEFAULT_CENTER = [21.1619, -86.8515];
+const DEFAULT_ZOOM = 12;
+
+const $ = (sel) => document.querySelector(sel);
+
+function setStatus(msg, tone="ok"){
+  const el = $("#statusBadge");
+  el.textContent = msg;
+  el.style.background = tone==="bad" ? "rgba(185,28,28,.18)" : "rgba(0,139,131,.12)";
+  el.style.borderColor = tone==="bad" ? "rgba(185,28,28,.35)" : "rgba(0,139,131,.25)";
+  el.style.color = tone==="bad" ? "#fecaca" : "var(--teal)";
+}
+
+function fillSelect(selectEl, arr){
+  if(!selectEl) return;
+  selectEl.querySelectorAll("option:not([disabled])").forEach(o=>o.remove());
+  arr.forEach(v=>{
+    const op=document.createElement("option");
+    op.value=v;
+    op.textContent=v;
+    selectEl.appendChild(op);
+  });
+}
+
+async function readStore(){
+  try{
+    const res = await fetch("/api/registros");
+    if(!res.ok) return [];
+    return await res.json();
+  }catch(e){
+    console.warn("Error leyendo servidor:", e);
+    return [];
+  }
+}
+
+function writeStore(arr){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+}
+
+function formToObj(form){
+  const fd = new FormData(form);
+  const obj = {};
+  fd.forEach((v,k)=> obj[k]= (typeof v==="string" ? v.trim() : v));
+  return obj;
+}
+
+function downloadBlob(filename, content, mime){
+  const BOM = "\uFEFF";
+  const payload = (typeof content === "string") ? (BOM + content) : content;
+  const blob = new Blob([payload], {type: mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function toCSV(rows){
+  if(!rows.length) return "";
+  const headers = Object.keys(rows[0]);
+  const esc = (v) => `"${(v ?? "").toString().replace(/"/g,'""')}"`;
+  const lines = [
+    headers.map(esc).join(","),
+    ...rows.map(r => headers.map(h=>esc(r[h])).join(","))
+  ];
+  return lines.join("\r\n");
+}
+
+function nowStamp(){
+  const d = new Date();
+  const pad=(n)=> String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
+}
+
+function formatoFechaMX(fecha){
+
+  if(!fecha) return "";
+
+  const partes = fecha.split("-");
+
+  if(partes.length === 3){
+
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+
+  }
+
+  return fecha;
+}
+
+function normalizarTexto(texto){
+  return (texto || "")
+    .toString()
+    .trim()
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\([^)]*\)/g, "")
+    .replace(/[@]/g, " ")
+    .replace(/[.,;:]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function obtenerValorFlexible(obj, posiblesClaves){
+  for(const clave of posiblesClaves){
+    if(obj[clave] !== undefined && obj[clave] !== null && obj[clave] !== ""){
+      return obj[clave];
+    }
+  }
+  return "";
+}
+
+function esSectorManual(){
+  const sectorEl = document.getElementById("sector");
+  return sectorEl?.dataset?.manual === "1";
+}
+
+function marcarSectorComoManual(valor=true){
+  const sectorEl = document.getElementById("sector");
+  if(!sectorEl) return;
+  sectorEl.dataset.manual = valor ? "1" : "0";
+}
+
+function compararMunicipio(valorFormulario, valorExcel){
+  const a = normalizarTexto(valorFormulario);
+  const b = normalizarTexto(valorExcel);
+
+  const equivalencias = {
+    "BENITO JUAREZ": ["BENITO JUAREZ","CANCUN"],
+    "PLAYA DEL CARMEN": ["PLAYA DEL CARMEN","SOLIDARIDAD"],
+    "OTHON P BLANCO": ["OTHON P BLANCO","OTHON P. BLANCO","CHETUMAL"]
+  };
+
+  for(const clave in equivalencias){
+    const grupo = equivalencias[clave].map(normalizarTexto);
+    if(grupo.includes(a) && grupo.includes(b)) return true;
+  }
+
+  return a === b;
+}
+
+function normalizarRegistroExcel(item){
+  return {
+    municipio: obtenerValorFlexible(item, ["NOMBRE_MUN","nombre_mun","MUNICIPIO","municipio"]),
+    colonia_larga: obtenerValorFlexible(item, ["NOMBRE_COLONIA","nombre_colonia"]),
+    colonia_corta: obtenerValorFlexible(item, ["COLONIA","colonia"]),
+    sector: obtenerValorFlexible(item, ["SECTOR","sector"]),
+    codcol: obtenerValorFlexible(item, ["CODCOL","codcol"]),
+    lat: obtenerValorFlexible(item, ["Y","y"]),
+    lon: obtenerValorFlexible(item, ["X","x"]),
+    concat: obtenerValorFlexible(item, ["CONCAT","concat"])
+  };
+}
+
+function validarCatalogoExcel(rows){
+  const catalogo = rows.map(normalizarRegistroExcel).filter(item =>
+    item.municipio && (item.colonia_larga || item.colonia_corta || item.codcol)
+  );
+
+  if(!catalogo.length){
+    throw new Error("No se encontraron registros válidos en el Excel.");
+  }
+
+  return catalogo;
+}
+
+function cargarExcelSectores(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = function(e){
+      try{
+        if(typeof XLSX === "undefined"){
+          throw new Error("No cargó la librería XLSX.");
+        }
+
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+
+        if(!workbook.SheetNames.length){
+          throw new Error("El archivo no tiene hojas.");
+        }
+
+        const sheetName = workbook.SheetNames.includes("Datos") ? "Datos" : workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        if(!sheet){
+          throw new Error("No se encontró la hoja del Excel.");
+        }
+
+        const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+        if(!rows.length){
+          throw new Error("La hoja está vacía.");
+        }
+
+        resolve(validarCatalogoExcel(rows));
+      }catch(err){
+        reject(err);
+      }
+    };
+
+    reader.onerror = function(){
+      reject(new Error("No se pudo leer el archivo Excel."));
+    };
+
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+async function cargarExcelSectoresDesdeRuta(ruta){
+  if(typeof XLSX === "undefined"){
+    throw new Error("No cargó la librería XLSX.");
+  }
+
+  const res = await fetch(ruta);
+  if(!res.ok){
+    throw new Error("No se pudo abrir el archivo Excel desde la ruta: " + ruta);
+  }
+
+  const arrayBuffer = await res.arrayBuffer();
+  const data = new Uint8Array(arrayBuffer);
+  const workbook = XLSX.read(data, { type: "array" });
+
+  if(!workbook.SheetNames.length){
+    throw new Error("El archivo no tiene hojas.");
+  }
+
+  const sheetName = workbook.SheetNames.includes("Datos") ? "Datos" : workbook.SheetNames[0];
+  const sheet = workbook.Sheets[sheetName];
+  if(!sheet){
+    throw new Error("No se encontró la hoja del Excel.");
+  }
+
+  const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+  if(!rows.length){
+    throw new Error("La hoja está vacía.");
+  }
+
+  return validarCatalogoExcel(rows);
+}
+
+function buscarCoincidenciasSector(municipioValor, coloniaValor){
+  const municipio = normalizarTexto(municipioValor);
+  const colonia = normalizarTexto(coloniaValor);
+
+  if(!municipio || !colonia || !BASE_SECTORES.length) return [];
+
+  return BASE_SECTORES.filter(item => {
+    const munOk = compararMunicipio(municipio, item.municipio);
+    if(!munOk) return false;
+
+    const colCorta = normalizarTexto(item.colonia_corta);
+    const colLarga = normalizarTexto(item.colonia_larga);
+    const codcol = normalizarTexto(item.codcol);
+    const concat = normalizarTexto(item.concat);
+
+    return (
+      colonia === colCorta ||
+      colonia === colLarga ||
+      colonia === codcol ||
+      colonia === concat ||
+      (colCorta && colonia.includes(colCorta)) ||
+      (colLarga && colonia.includes(colLarga)) ||
+      (codcol && colonia.includes(codcol)) ||
+      (concat && colonia.includes(concat)) ||
+      (colCorta && colCorta.includes(colonia)) ||
+      (colLarga && colLarga.includes(colonia))
+    );
+  });
+}
+
+function elegirMejorCoincidencia(lista, coloniaValor){
+  if(!lista.length) return null;
+
+  const colonia = normalizarTexto(coloniaValor);
+
+  let exacta = lista.find(item =>
+    normalizarTexto(item.colonia_corta) === colonia ||
+    normalizarTexto(item.colonia_larga) === colonia ||
+    normalizarTexto(item.codcol) === colonia ||
+    normalizarTexto(item.concat) === colonia
+  );
+  if(exacta) return exacta;
+
+  let porCorta = lista.find(item => {
+    const v = normalizarTexto(item.colonia_corta);
+    return v && colonia.includes(v);
+  });
+  if(porCorta) return porCorta;
+
+  let porLarga = lista.find(item => {
+    const v = normalizarTexto(item.colonia_larga);
+    return v && colonia.includes(v);
+  });
+  if(porLarga) return porLarga;
+
+  let porCodcol = lista.find(item => {
+    const v = normalizarTexto(item.codcol);
+    return v && colonia.includes(v);
+  });
+  if(porCodcol) return porCodcol;
+
+  return lista[0];
+}
+
+function buscarSectorAutomatico(forzar=false){
+  const municipioEl = document.getElementById("municipio");
+  const coloniaEl = document.getElementById("colonia");
+  const sectorEl = document.getElementById("sector");
+  const latEl = document.getElementById("lat");
+  const lonEl = document.getElementById("lon");
+
+  if(!municipioEl || !coloniaEl || !sectorEl) return;
+  if(!BASE_SECTORES.length) return;
+
+  const municipio = municipioEl.value;
+  const colonia = coloniaEl.value;
+
+  if(!municipio || !colonia){
+    if(!esSectorManual()) sectorEl.value = "";
+    return;
+  }
+
+  const coincidencias = buscarCoincidenciasSector(municipio, colonia);
+  const mejor = elegirMejorCoincidencia(coincidencias, colonia);
+
+  if(mejor){
+    if(!esSectorManual() || forzar){
+      sectorEl.value = mejor.sector || "";
+      marcarSectorComoManual(false);
+    }
+
+    if(mejor.lat && mejor.lon){
+      const la = Number(mejor.lat);
+      const lo = Number(mejor.lon);
+      if(Number.isFinite(la) && Number.isFinite(lo)){
+        latEl.value = la.toFixed(6);
+        lonEl.value = lo.toFixed(6);
+      }
+    }
+
+    setStatus(`Sector detectado: ${mejor.sector || "S/D"} | Colonia: ${mejor.colonia_corta || mejor.colonia_larga || ""}`, "ok");
+  }else{
+    if(!esSectorManual()) sectorEl.value = "";
+    setStatus("No se encontró sector para ese municipio y colonia. Puedes capturarlo manualmente.", "bad");
+  }
+}
+
+function autocompletarColoniaDesdeDireccion(){
+  const municipioEl = document.getElementById("municipio");
+  const direccionEl = document.getElementById("direccion");
+  const coloniaEl = document.getElementById("colonia");
+
+  if(!municipioEl || !direccionEl || !coloniaEl) return;
+  if(!BASE_SECTORES.length) return;
+
+  const municipio = municipioEl.value;
+  const direccion = normalizarTexto(direccionEl.value);
+
+  if(!municipio || !direccion) return;
+
+  const candidatas = BASE_SECTORES.filter(item => compararMunicipio(municipio, item.municipio));
+
+  const encontrada = candidatas.find(item => {
+    const colCorta = normalizarTexto(item.colonia_corta);
+    const colLarga = normalizarTexto(item.colonia_larga);
+    const codcol = normalizarTexto(item.codcol);
+    const concat = normalizarTexto(item.concat);
+
+    return (
+      (colCorta && direccion.includes(colCorta)) ||
+      (colLarga && direccion.includes(colLarga)) ||
+      (codcol && direccion.includes(codcol)) ||
+      (concat && direccion.includes(concat))
+    );
+  });
+
+  if(encontrada && !coloniaEl.value.trim()){
+    coloniaEl.value = encontrada.colonia_corta || encontrada.colonia_larga || encontrada.codcol || "";
+    buscarSectorAutomatico();
+  }
+}
+
+function distanciaMetros(lat1, lon1, lat2, lon2){
+  const toRad = (g) => g * Math.PI / 180;
+  const R = 6371000;
+
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+
+  const a =
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+function obtenerCandidatosExcelPorMunicipio(municipioValor){
+  if(!BASE_SECTORES.length) return [];
+
+  if(!municipioValor){
+    return BASE_SECTORES.filter(item => Number.isFinite(Number(item.lat)) && Number.isFinite(Number(item.lon)));
+  }
+
+  return BASE_SECTORES.filter(item =>
+    compararMunicipio(municipioValor, item.municipio) &&
+    Number.isFinite(Number(item.lat)) &&
+    Number.isFinite(Number(item.lon))
+  );
+}
+
+function detectarColoniaDesdeExcelPorPunto(lat, lon, municipioPreferido=""){
+  const candidatosMunicipio = obtenerCandidatosExcelPorMunicipio(municipioPreferido);
+  const candidatos = candidatosMunicipio.length ? candidatosMunicipio : obtenerCandidatosExcelPorMunicipio("");
+
+  if(!candidatos.length) return null;
+
+  let mejor = null;
+  let mejorDist = Infinity;
+
+  for(const item of candidatos){
+    const la = Number(item.lat);
+    const lo = Number(item.lon);
+    const dist = distanciaMetros(lat, lon, la, lo);
+    if(dist < mejorDist){
+      mejorDist = dist;
+      mejor = item;
+    }
+  }
+
+  if(!mejor) return null;
+
+  const municipioSel = document.getElementById("municipio")?.value || "";
+  const umbral = municipioSel ? 3500 : 5000;
+  if(mejorDist > umbral) return null;
+
+  return {
+    ...mejor,
+    distancia_metros: Math.round(mejorDist)
+  };
+}
+
+function llenarCamposDesdeExcel(item, latClick=null, lonClick=null){
+  if(!item) return false;
+
+  const coloniaEl = document.getElementById("colonia");
+  const sectorEl = document.getElementById("sector");
+  const municipioEl = document.getElementById("municipio");
+  const latEl = document.getElementById("lat");
+  const lonEl = document.getElementById("lon");
+
+  const coloniaValor = item.colonia_corta || item.colonia_larga || item.codcol || "";
+  const sectorValor = item.sector || "";
+  const municipioValor = item.municipio || "";
+
+  if(municipioEl && !municipioEl.value && municipioValor){
+    const match = MUNICIPIOS.find(m => compararMunicipio(m, municipioValor));
+    if(match) municipioEl.value = match;
+  }
+
+  if(coloniaEl && coloniaValor) coloniaEl.value = coloniaValor;
+
+  if(sectorEl && sectorValor){
+    sectorEl.value = sectorValor;
+    marcarSectorComoManual(true);
+  }
+
+  if(latEl && lonEl){
+    if(latClick !== null && lonClick !== null){
+      latEl.value = Number(latClick).toFixed(6);
+      lonEl.value = Number(lonClick).toFixed(6);
+    }else if(Number.isFinite(Number(item.lat)) && Number.isFinite(Number(item.lon))){
+      latEl.value = Number(item.lat).toFixed(6);
+      lonEl.value = Number(item.lon).toFixed(6);
+    }
+  }
+
+  return true;
+}
+
+function detectarYAplicarColoniaExcel(lat, lon){
+  const municipioActual = document.getElementById("municipio")?.value || "";
+  const mejor = detectarColoniaDesdeExcelPorPunto(lat, lon, municipioActual);
+  if(!mejor) return false;
+
+  llenarCamposDesdeExcel(mejor, lat, lon);
+
+  const coloniaValor = mejor.colonia_corta || mejor.colonia_larga || mejor.codcol || "S/D";
+  const sectorValor = mejor.sector || "S/D";
+  const dist = mejor.distancia_metros ?? 0;
+
+  setStatus(`Colonia detectada: ${coloniaValor} | Sector: ${sectorValor} | Dist: ${dist} m`, "ok");
+  return true;
+}
+
+function obtenerValoresDesdeKML(p){
+  return {
+    colonia: (p.COLONIA ?? p.colonia ?? p.NOMBRE ?? p.nombre ?? p.NAME ?? p.Name ?? p.name ?? "").toString().trim(),
+    sector: (p.SECTOR ?? p.sector ?? "").toString().trim(),
+    municipio: (p.MUNICIPIO ?? p.municipio ?? "").toString().trim()
+  };
+}
+
+function quitarColoniasMunicipio(){
+  if(capaColonias && map){
+    try{ map.removeLayer(capaColonias); }catch(e){}
+    capaColonias = null;
+  }
+}
+
+function cargarColoniasMunicipio(municipio, ajustarVista=true){
+  if(!map) return;
+
+  quitarColoniasMunicipio();
+
+  const archivo = KML_MUNICIPIOS[municipio];
+  if(!archivo){
+    setStatus("Municipio sin archivo KML configurado", "bad");
+    return;
+  }
+
+  try{
+    capaColonias = omnivore.kml(archivo);
+
+    capaColonias.on("ready", function(){
+      try{
+        capaColonias.eachLayer(function(layer){
+          if(layer.setStyle){
+            layer.setStyle({
+              color: "#0b2d4d",
+              weight: 1.5,
+              opacity: 1,
+              fillColor: "#7fc8a9",
+              fillOpacity: 0.18
+            });
+          }
+
+          const p = layer.feature?.properties || {};
+          const valores = obtenerValoresDesdeKML(p);
+
+          const titulo = valores.colonia || p.NAME || p.Name || p.name || "Colonia";
+
+          let html = `<div style="min-width:230px;">`;
+          html += `<div style="font-weight:700; font-size:16px; margin-bottom:8px;">${titulo}</div>`;
+          if(valores.colonia) html += `<div><b>COLONIA:</b> ${valores.colonia}</div>`;
+          if(valores.sector) html += `<div><b>SECTOR:</b> ${valores.sector}</div>`;
+          if(valores.municipio) html += `<div><b>MUNICIPIO:</b> ${valores.municipio}</div>`;
+          if(p.ID || p.id) html += `<div><b>ID:</b> ${p.ID || p.id}</div>`;
+          if(p.CVE_MPIO || p.cve_mpio) html += `<div><b>CVE_MPIO:</b> ${p.CVE_MPIO || p.cve_mpio}</div>`;
+          if(p.AREA || p.area) html += `<div><b>AREA:</b> ${p.AREA || p.area}</div>`;
+          if(p.description || p.DESCRIPTION) html += `<div><b>DESCRIPCIÓN:</b> ${p.description || p.DESCRIPTION}</div>`;
+          html += `<div style="margin-top:10px; color:#0b2d4d; font-weight:700;">Clic en la colonia para llenar COLONIA y SECTOR</div>`;
+          html += `</div>`;
+
+          if(layer.bindPopup) layer.bindPopup(html);
+
+          layer.on("mouseover", function(){
+            if(layer.setStyle){
+              layer.setStyle({ weight: 2.5, fillOpacity: 0.28 });
+            }
+          });
+
+          layer.on("mouseout", function(){
+            if(layer.setStyle){
+              layer.setStyle({
+                color: "#0b2d4d",
+                weight: 1.5,
+                opacity: 1,
+                fillColor: "#7fc8a9",
+                fillOpacity: 0.18
+              });
+            }
+          });
+
+          layer.on("click", function(e){
+            if(valores.colonia){
+              document.getElementById("colonia").value = valores.colonia;
+            }
+            if(valores.sector){
+              document.getElementById("sector").value = valores.sector;
+              marcarSectorComoManual(true);
+            }
+            if(e?.latlng){
+              setMapMarker(e.latlng.lat, e.latlng.lng);
+            }
+            if(layer.openPopup && e?.latlng){
+              layer.openPopup(e.latlng);
+            }
+            setStatus(`Colonia seleccionada: ${valores.colonia || "S/D"} | Sector: ${valores.sector || "S/D"}`, "ok");
+          });
+        });
+
+        if(ajustarVista && capaColonias.getBounds && capaColonias.getBounds().isValid()){
+          map.fitBounds(capaColonias.getBounds(), { padding: [20,20] });
+        }
+
+        setStatus(`Colonias KML cargadas: ${municipio}`, "ok");
+      }catch(errInterno){
+        console.error(errInterno);
+      }
+    });
+
+    capaColonias.on("error", function(err){
+      console.error("Error KML:", err);
+      setStatus(`No se pudo cargar KML de colonias de ${municipio}`, "bad");
+      alert("No se pudo cargar el archivo KML de colonias del municipio.\n\nRevisa que exista en la carpeta kml y que el nombre sea exacto.");
+    });
+
+    capaColonias.addTo(map);
+  }catch(err){
+    console.error(err);
+    setStatus(`Error al cargar colonias de ${municipio}`, "bad");
+  }
+}
+
+function setMapMarker(lat, lon){
+  const la = Number(lat), lo = Number(lon);
+  if(!Number.isFinite(la) || !Number.isFinite(lo)) return;
+
+  if(marker){
+    marker.setLatLng([la, lo]);
+  }else{
+    marker = L.marker([la, lo]).addTo(map);
+  }
+  map.setView([la, lo], 16);
+
+  const latEl = document.getElementById("lat");
+  const lonEl = document.getElementById("lon");
+  if(latEl) latEl.value = la.toFixed(6);
+  if(lonEl) lonEl.value = lo.toFixed(6);
+
+  const mm = document.getElementById("mapMode");
+  if(mm) mm.textContent = "Marcado";
+}
+
+function clearMapMarker(){
+  if(marker){
+    map.removeLayer(marker);
+    marker = null;
+  }
+  $("#lat").value = "";
+  $("#lon").value = "";
+  $("#mapMode").textContent = "Sin marcar";
+}
+
+function parseLatLon(input){
+  const s = (input || "").trim();
+  if(!s) return null;
+
+  const norm = s
+    .replace(/latitud|latitude|lat/gi, "lat")
+    .replace(/longitud|longitude|lng|lon/gi, "lon")
+    .replace(/[;]/g, ",")
+    .replace(/\s+/g, " ");
+
+  let m = norm.match(/lat\s*[:=]?\s*(-?\d+(?:\.\d+)?)\s*[ ,]?\s*lon\s*[:=]?\s*(-?\d+(?:\.\d+)?)/i);
+  if(m){
+    const lat = Number(m[1]), lon = Number(m[2]);
+    if(Number.isFinite(lat) && Number.isFinite(lon)) return {lat, lon};
+  }
+
+  m = norm.match(/(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)/);
+  if(m){
+    const a = Number(m[1]);
+    const b = Number(m[2]);
+    if(!Number.isFinite(a) || !Number.isFinite(b)) return null;
+
+    let lat = a, lon = b;
+    const aIsLat = Math.abs(a) <= 90;
+    const bIsLat = Math.abs(b) <= 90;
+
+    if(!aIsLat && bIsLat){
+      lat = b; lon = a;
+    }
+
+    if(Math.abs(lat) <= 90 && Math.abs(lon) <= 180){
+      return {lat, lon};
+    }
+  }
+
+  return null;
+}
+
+async function geocodeOSM_text(query){
+  const url =
+    "https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=mx&accept-language=es&q=" +
+    encodeURIComponent(query);
+
+  const res = await fetch(url, {
+    headers: { "Accept": "application/json" }
+  });
+
+  if(!res.ok) throw new Error("No se pudo buscar (Nominatim)");
+  const json = await res.json();
+  if(!Array.isArray(json) || !json.length) return null;
+
+  const preferred = json.find(x => /quintana roo/i.test(x.display_name || "")) || json[0];
+
+  return {
+    lat: Number(preferred.lat),
+    lon: Number(preferred.lon),
+    display: preferred.display_name || ""
+  };
+}
+
+async function buscarDireccion(){
+  const raw = (document.getElementById("addrInput").value || "").trim();
+  if(!raw){
+    setStatus("Escribe un municipio/colonia/dirección o lat,lon", "bad");
+    return;
+  }
+
+  const coords = parseLatLon(raw);
+  if(coords){
+    setMapMarker(coords.lat, coords.lon);
+    const encontro = detectarYAplicarColoniaExcel(coords.lat, coords.lon);
+    if(!encontro) setStatus("Coordenadas ubicadas", "ok");
+    return;
+  }
+
+  let q = raw;
+  const hasMexico = /mex/i.test(q);
+  const hasQroo = /quintana\s*roo|qroo|q\.?\s*roo/i.test(q);
+  if(!hasMexico && !hasQroo){
+    q = `${q}, Quintana Roo, México`;
+  }
+
+  setStatus("Buscando ubicación...", "ok");
+  try{
+    const r = await geocodeOSM_text(q);
+    if(!r){
+      setStatus("No encontré esa búsqueda", "bad");
+      alert('No encontré coincidencias. Prueba con más detalle, ej:\n- "SM 55 Cancún"\n- "Colonia Centro Tulum"\n- "Av Tulum Cancún"\n- "21.1619,-86.8515"');
+      return;
+    }
+
+    setMapMarker(r.lat, r.lon);
+
+    const encontro = detectarYAplicarColoniaExcel(r.lat, r.lon);
+    if(!encontro) setStatus("Ubicación encontrada", "ok");
+  }catch(e){
+    setStatus("Error al buscar (internet)", "bad");
+    alert("Error al buscar:\n" + e.message + "\n\nNota: la búsqueda por texto requiere internet (Nominatim).");
+  }
+}
+
+function descargarMapaPNG(){
+  if(!map){
+    setStatus("Mapa no inicializado", "bad");
+    return;
+  }
+
+  setStatus("Generando imagen del mapa...", "ok");
+
+  const stamp = nowStamp().replace(/[:]/g,"-");
+  const filename = `MAPA_OSM_${stamp}.png`;
+
+  leafletImage(map, function(err, canvas){
+    if(err){
+      console.error(err);
+      setStatus("No se pudo exportar el mapa", "bad");
+      alert(
+        "No se pudo generar la imagen del mapa.\n\n" +
+        "Tip: Esto suele pasar si el tileLayer no permite CORS.\n" +
+        "Ya agregamos crossOrigin:true, pero si tu red bloquea OSM, prueba desde otra red."
+      );
+      return;
+    }
+
+    canvas.toBlob(function(blob){
+      if(!blob){
+        setStatus("No se pudo convertir a PNG", "bad");
+        alert("No se pudo convertir el mapa a PNG (blob).");
+        return;
+      }
+      saveAs(blob, filename);
+      setStatus("Mapa descargado (PNG)", "ok");
+    }, "image/png");
+  });
+}
+
+function appendSelectedImages(fd){
+  const archivos = document.querySelectorAll('input[name="imagenes[]"]');
+  archivos.forEach((input, i) => {
+    const file = input.files?.[0];
+    if(file) fd.append(`img${i+1}`, file);
+  });
+}
+
+async function downloadPPTX(endpoint, fd, filenameBase){
+  setStatus("Generando...", "ok");
+  try{
+    const res = await fetch(endpoint, { method:"POST", body: fd });
+
+    if(!res.ok){
+      const msg = await res.text();
+      setStatus("Error al generar", "bad");
+      alert("Error del servidor:\n\n" + msg);
+      return;
+    }
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filenameBase;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    URL.revokeObjectURL(url);
+    setStatus("Descarga lista", "ok");
+
+  }catch(err){
+    setStatus("Error de red/servidor", "bad");
+    alert("Error:\n" + err.message);
+  }
+}
+
+async function exportPPTX(){
+  const form = document.getElementById("formIPH");
+  if(!form.reportValidity()){
+    setStatus("Faltan campos obligatorios", "bad");
+    return;
+  }
+
+  const fd = new FormData(form);
+  appendSelectedImages(fd);
+
+  const obj = formToObj(form);
+  const folio = (obj.folio_iph || "RESULTADOS").replace(/[^\w\-]+/g,"_");
+  await downloadPPTX(PPTX_ENDPOINT, fd, `${folio}_${nowStamp()}.pptx`);
+}
+
+async function exportPPTXFromRecord(record){
+  if(!record){
+    setStatus("Registro inválido", "bad");
+    return;
+  }
+
+  const fd = new FormData();
+  Object.keys(record).forEach(k=>{
+    if(k === "_capturado_en") return;
+    fd.append(k, record[k] ?? "");
+  });
+
+  appendSelectedImages(fd);
+
+  const folio = (record.folio_iph || "RESULTADOS").toString().replace(/[^\w\-]+/g,"_");
+  await downloadPPTX(PPTX_ENDPOINT, fd, `${folio}_${nowStamp()}.pptx`);
+}
+
+async function exportZIPAllPPTX(){
+  const data = await readStore();
+  if(!data.length){
+    setStatus("No hay registros", "bad");
+    alert("No hay registros guardados para generar el ZIP.");
+    return;
+  }
+
+  const fd = new FormData();
+  fd.append("records_json", JSON.stringify(data));
+  appendSelectedImages(fd);
+
+  await downloadPPTX(ZIP_ENDPOINT, fd, `PPTX_TODOS_${nowStamp()}.zip`);
+}
+
+async function render(){
+  const data = await readStore();
+  $("#countBadge").textContent = `Registros: ${data.length}`;
+  $("#kpiTotal").textContent = data.length;
+  $("#kpiKey").textContent = STORAGE_KEY;
+  $("#storeKeyBadge").textContent = STORAGE_KEY;
+
+  const tb = $("#tbody");
+  tb.innerHTML = "";
+
+  data.forEach((r, idx)=>{
+    const tr = document.createElement("tr");
+    const td = (t, cls="") => {
+      const x = document.createElement("td");
+      if(cls) x.className = cls;
+      x.textContent = t ?? "";
+      return x;
+    };
+
+    const tdA = document.createElement("td");
+    const box = document.createElement("div");
+    box.className = "mini-actions";
+
+    const btnLoad = document.createElement("button");
+    btnLoad.className = "linkbtn dark";
+    btnLoad.type = "button";
+    btnLoad.textContent = "Cargar";
+    btnLoad.onclick = ()=> loadIntoForm(idx);
+
+    const btnPptx = document.createElement("button");
+    btnPptx.className = "linkbtn";
+    btnPptx.type = "button";
+    btnPptx.textContent = "PPTX";
+    btnPptx.onclick = ()=> exportPPTXFromRecord(r);
+
+    const btnDel = document.createElement("button");
+    btnDel.className = "linkbtn danger";
+    btnDel.type = "button";
+    btnDel.textContent = "Eliminar";
+    btnDel.onclick = ()=> deleteAt(idx);
+
+    const btnVerMapa = document.createElement("button");
+    btnVerMapa.className = "linkbtn";
+    btnVerMapa.type = "button";
+    btnVerMapa.textContent = "Mapa";
+    btnVerMapa.onclick = ()=>{
+      if(r.lat && r.lon){
+        setMapMarker(r.lat, r.lon);
+        setStatus("Ubicación cargada en mapa", "ok");
+      }else{
+        setStatus("Este registro no tiene lat/lon", "bad");
+        alert("Este registro no tiene LAT/LON guardados.");
+      }
+    };
+
+    box.appendChild(btnLoad);
+    box.appendChild(btnPptx);
+    box.appendChild(btnVerMapa);
+    box.appendChild(btnDel);
+    tdA.appendChild(box);
+
+    tr.append(
+      td(idx+1),
+      td(r.folio_iph),
+      td(r.municipio),
+      td(r.id_operativo),
+      td(formatoFechaMX(r.fecha)),
+      td(`${(r.nombre||"").trim()} ${(r.ap_paterno||"").trim()} ${(r.ap_materno||"").trim()}`.trim()),
+      td(r.rnd),
+      td(r.hecho),
+      td(r.observaciones_rnd, "col-obs"),
+      tdA
+    );
+
+    tb.appendChild(tr);
+  });
+}
+
+async function loadIntoForm(index){
+
+  const data = await readStore();
+
+  const r = data[index];
+
+  if(!r) return;
+
+  const form = $("#formIPH");
+
+  [...form.elements].forEach(el=>{
+
+    if(!el.name) return;
+
+    if(el.type==="button") return;
+
+    if(el.type==="submit") return;
+
+    if(el.type==="file") return;
+
+    if(el.type==="checkbox"){
+
+      el.checked = !!r[el.name];
+
+    }else{
+
+      el.value = (r[el.name] ?? "");
+
+    }
+
+  });
+
+  marcarSectorComoManual(
+    !!(
+      r.sector &&
+      r.sector.toString().trim()
+    )
+  );
+
+  if(r.lat && r.lon){
+
+    setMapMarker(
+      r.lat,
+      r.lon
+    );
+
+  }
+
+  if(r.municipio){
+
+    cargarColoniasMunicipio(
+      r.municipio,
+      false
+    );
+
+  }
+
+  setStatus(
+    `Cargado registro #${index+1}`,
+    "ok"
+  );
+
+}
+async function deleteAt(index){
+
+  if(!confirm("¿Seguro que deseas eliminar este registro?")) return;
+
+  const res = await fetch(`/api/registros/${index}`, {
+    method: "DELETE"
+  });
+
+  if(!res.ok){
+    alert("No se pudo eliminar el registro.");
+    return;
+  }
+
+  $("#lastSaved").textContent =
+    `Actualizado: ${new Date().toLocaleString()}`;
+
+  setStatus("Registro eliminado", "ok");
+
+  await render();
+}
+
+function clearForm(){
+  $("#formIPH").reset();
+  clearMapMarker();
+  marcarSectorComoManual(false);
+  quitarColoniasMunicipio();
+  setStatus("Formulario limpio", "ok");
+}
+
+async function saveForm(){
+
+  const form = $("#formIPH");
+
+  if(!form.reportValidity()) {
+    setStatus("Faltan campos obligatorios", "bad");
+    return;
+  }
+
+  const obj = formToObj(form);
+
+  obj._capturado_en = new Date().toISOString();
+
+  // ==========================
+  // SUBIR IMÁGENES
+  // ==========================
+
+  const fdImgs = new FormData();
+
+  const archivos = document.querySelectorAll('input[type="file"]');
+
+  archivos.forEach((input, i) => {
+
+    const file = input.files?.[0];
+
+    if(file){
+      fdImgs.append(`img${i+1}`, file);
+    }
+
+  });
+
+  try{
+
+    const res = await fetch(
+      "/guardar_imagenes_registro",
+      {
+        method: "POST",
+        body: fdImgs
+      }
+    );
+
+    if(res.ok){
+
+      const rutas = await res.json();
+
+      Object.keys(rutas).forEach(k => {
+        obj[k] = rutas[k];
+      });
+
+    }else{
+
+      alert(
+        "No se pudieron guardar las imágenes."
+      );
+
+    }
+
+  }catch(err){
+
+    alert(
+      "Error al subir imágenes:\n" +
+      err.message
+    );
+
+  }
+
+  // ==========================
+  // GUARDAR REGISTRO
+  // ==========================
+
+ const resGuardar = await fetch("/api/registros", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify(obj)
+});
+
+if(!resGuardar.ok){
+  alert("No se pudo guardar el registro en el servidor.");
+  return;
+}
+
+  $("#lastSaved").textContent =
+    `Guardado: ${new Date().toLocaleString()}`;
+
+  setStatus(
+    "Registro guardado",
+    "ok"
+  );
+
+  render();
+
+  clearForm();
+}
+async function deleteLast(){
+
+  const data = await readStore();
+
+  if(!data.length){
+
+    setStatus(
+      "No hay registros",
+      "bad"
+    );
+
+    return;
+  }
+
+  const index = data.length - 1;
+
+  const res = await fetch(
+    `/api/registros/${index}`,
+    {
+      method: "DELETE"
+    }
+  );
+
+  if(!res.ok){
+
+    alert(
+      "No se pudo eliminar el último registro."
+    );
+
+    return;
+  }
+
+  $("#lastSaved").textContent =
+    `Actualizado: ${new Date().toLocaleString()}`;
+
+  setStatus(
+    "Último eliminado",
+    "ok"
+  );
+
+  await render();
+
+}
+
+async function wipeAll(){
+
+  const data = await readStore();
+
+  if(!data.length){
+
+    setStatus(
+      "No hay nada que borrar",
+      "bad"
+    );
+
+    return;
+  }
+
+  if(
+    !confirm(
+      "¿Seguro que deseas BORRAR TODO?"
+    )
+  ) return;
+
+  const res = await fetch(
+    "/api/registros",
+    {
+      method: "DELETE"
+    }
+  );
+
+  if(!res.ok){
+
+    alert(
+      "No se pudieron borrar los registros."
+    );
+
+    return;
+  }
+
+  $("#lastSaved").textContent =
+    "Sin cambios";
+
+  setStatus(
+    "Borrado total",
+    "ok"
+  );
+
+  await render();
+}
+
+const HEADERS_IPH = [
+  "folio_iph","municipio","id_operativo","fecha","hora","direccion","colonia","sector","turno","unidad",
+  "nombre_operativo","primer_respondiente","hecho",
+  "carpeta_investigacion","policias_adicionales","personas_detenidas","vehiculos_asegurados",
+  "vehiculos_inspec","armas_aseguradas","droga_asegurada","uso_fuerza","observaciones_rnd","lat","lon",
+  "rnd","municipio_aseguramiento","elemento_apoyo","presentado_autoridad","nombre",
+  "ap_paterno","ap_materno","alias","sexo","edad","estado_fisico","direccion_detenido",
+  "colonia_detenido","mpio_detenido","estado_detenido","motivo_detencion_1",
+  "motivo_detencion_2","motivo_detencion_3","grupo_delictivo","victima","n_victimas",
+  "pais_origen","ultimo_grado_estudios","ocupacion","aseguramiento_1","aseguramiento_2",
+  "aseguramiento_3","aseguramiento_4","aseguramiento_5","direccion_ocupacion",
+  "detenido1","alias1","detenido2","alias2","detenido3","alias3","detenido4","alias4",
+  "_capturado_en"
+];
+
+function ordenarRegistroIPH(r){
+
+  const obj = {};
+
+  HEADERS_IPH.forEach(h => {
+
+    obj[h] = r[h] ?? "";
+
+  });
+
+  return obj;
+}
+
+function toCSV_IPH(rows){
+
+  const esc = (v) =>
+    `"${(v ?? "").toString().replace(/"/g,'""')}"`;
+
+  const lines = [
+
+    HEADERS_IPH.map(esc).join(","),
+
+    ...rows.map(r => {
+
+      const o = ordenarRegistroIPH(r);
+
+      return HEADERS_IPH
+        .map(h => esc(o[h]))
+        .join(",");
+
+    })
+
+  ];
+
+  return lines.join("\r\n");
+}
+
+async function exportCSV(){
+
+  const data = await readStore();
+
+  if(!data.length){
+
+    setStatus(
+      "No hay registros",
+      "bad"
+    );
+
+    return;
+  }
+
+  downloadBlob(
+    `IPH_${nowStamp()}.csv`,
+    toCSV_IPH(data),
+    "text/csv;charset=utf-8"
+  );
+
+  setStatus(
+    "CSV descargado",
+    "ok"
+  );
+}
+
+async function exportXLSX(){
+
+  const data = await readStore();
+
+  if(!data.length){
+
+    setStatus(
+      "No hay registros",
+      "bad"
+    );
+
+    return;
+  }
+
+  const dataOrdenada =
+    data.map(ordenarRegistroIPH);
+
+  const wb = XLSX.utils.book_new();
+
+  const ws = XLSX.utils.json_to_sheet(
+    dataOrdenada,
+    {
+      header: HEADERS_IPH
+    }
+  );
+
+  XLSX.utils.book_append_sheet(
+    wb,
+    ws,
+    "IPH"
+  );
+
+  XLSX.writeFile(
+    wb,
+    `IPH_${nowStamp()}.xlsx`
+  );
+
+  setStatus(
+    "XLSX descargado",
+    "ok"
+  );
+}
+
+function enableEnterNavigation(){
+  const form = document.getElementById("formIPH");
+  const focusables = Array.from(
+    form.querySelectorAll("input:not([type=hidden]):not([disabled]), select:not([disabled]), textarea:not([disabled])")
+  );
+
+  focusables.forEach((el, idx)=>{
+    el.addEventListener("keydown", (e)=>{
+      if (e.key === "Enter") {
+        if(el.tagName === "TEXTAREA") return;
+        e.preventDefault();
+        const next = focusables[idx + 1];
+        if (next) next.focus();
+      }
+    });
+  });
+}
+
+(function init(){
+  fillSelect(document.querySelector('select[name="municipio"]'), MUNICIPIOS);
+  fillSelect(document.querySelector('select[name="municipio_aseguramiento"]'), MUNICIPIOS);
+  fillSelect(document.querySelector('select[name="id_operativo"]'), IDS);
+  fillSelect(document.querySelector('select[name="nombre_operativo"]'), OPERATIVOS);
+  fillSelect(document.querySelector('select[name="presentado_autoridad"]'), AUTORIDADES);
+  fillSelect(document.querySelector('select[name="hecho"]'), HECHOS);
+
+  $("#btnGuardar").addEventListener("click", saveForm);
+  $("#btnBorrarTodo").addEventListener("click", wipeAll);
+  $("#btnCSV").addEventListener("click", exportCSV);
+  $("#btnXLSX").addEventListener("click", exportXLSX);
+  $("#btnPPTX").addEventListener("click", exportPPTX);
+  $("#btnZIP_PPTX").addEventListener("click", exportZIPAllPPTX);
+  $("#btnDescargarMapa").addEventListener("click", descargarMapaPNG);
+
+  (async function cargarBaseInicial(){
+    try{
+      BASE_SECTORES = await cargarExcelSectoresDesdeRuta(EXCEL_SECTORES_PATH);
+      setStatus(`Base Excel cargada automáticamente: ${BASE_SECTORES.length} registros`, "ok");
+    }catch(err){
+      console.error(err);
+      setStatus("No se pudo cargar el Excel automático", "bad");
+      alert("No se pudo cargar automáticamente la base Excel.\n\nDetalle: " + err.message);
+    }
+  })();
+
+  const excelInput = document.getElementById("excelSectores");
+  if(excelInput){
+    excelInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if(!file) return;
+
+      try{
+        BASE_SECTORES = await cargarExcelSectores(file);
+        setStatus(`Base cargada manualmente: ${BASE_SECTORES.length} registros`, "ok");
+        buscarSectorAutomatico(true);
+      }catch(err){
+        console.error(err);
+        setStatus("Error al cargar Excel", "bad");
+        alert("No se pudo leer el archivo Excel de colonias/sectores.\n\nDetalle: " + err.message);
+      }
+    });
+  }
+
+  document.getElementById("municipio")?.addEventListener("change", () => {
+    const municipioActual = document.getElementById("municipio").value;
+
+    marcarSectorComoManual(false);
+    autocompletarColoniaDesdeDireccion();
+    buscarSectorAutomatico(true);
+
+    if(municipioActual){
+      cargarColoniasMunicipio(municipioActual, true);
+    }else{
+      quitarColoniasMunicipio();
+    }
+  });
+
+  document.getElementById("colonia")?.addEventListener("input", () => {
+    marcarSectorComoManual(false);
+    buscarSectorAutomatico(true);
+  });
+
+  document.getElementById("colonia")?.addEventListener("blur", () => {
+    marcarSectorComoManual(false);
+    buscarSectorAutomatico(true);
+  });
+
+  document.getElementById("sector")?.addEventListener("input", () => {
+    const sectorEl = document.getElementById("sector");
+    if(sectorEl.value.trim()){
+      marcarSectorComoManual(true);
+    }else{
+      marcarSectorComoManual(false);
+    }
+  });
+
+  document.getElementById("direccion")?.addEventListener("input", () => {
+    autocompletarColoniaDesdeDireccion();
+  });
+
+  document.getElementById("direccion")?.addEventListener("blur", () => {
+    autocompletarColoniaDesdeDireccion();
+    buscarSectorAutomatico();
+  });
+
+  map = L.map("map").setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+  setTimeout(() => {
+
+  map.invalidateSize();
+
+}, 300);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap',
+    crossOrigin: true
+  }).addTo(map);
+
+  map.on("click", (e)=>{
+    const {lat, lng} = e.latlng;
+    setMapMarker(lat, lng);
+
+    const encontro = detectarYAplicarColoniaExcel(lat, lng);
+    if(!encontro){
+      setStatus("Ubicación marcada en mapa", "ok");
+    }
+  });
+
+  $("#btnBuscarDir").addEventListener("click", buscarDireccion);
+  $("#addrInput").addEventListener("keydown", (e)=>{
+    if(e.key === "Enter"){
+      e.preventDefault();
+      buscarDireccion();
+    }
+  });
+
+  $("#btnLimpiarMarker").addEventListener("click", ()=>{
+    clearMapMarker();
+    setStatus("Marcador quitado", "ok");
+  });
+
+  enableEnterNavigation();
+  marcarSectorComoManual(false);
+  render();
+})();
+</script>
+</body>
+</html>

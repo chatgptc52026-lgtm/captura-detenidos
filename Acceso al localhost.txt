@@ -1,0 +1,5 @@
+http://127.0.0.1:5000 -----> publica
+
+http://localhost:5000 ------> local para entrar a la base de detenidos
+
+http://10.180.0.201:5000 ------> publica como si fuera compañero

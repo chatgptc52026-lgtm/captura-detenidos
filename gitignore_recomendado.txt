@@ -1,0 +1,6 @@
+usuarios.json
+registros.json
+uploads/
+salidas/
+__pycache__/
+*.pyc

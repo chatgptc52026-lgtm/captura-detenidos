@@ -358,6 +358,7 @@
     <div class="actions">
       <button class="btn btn-primary" id="btnGuardar" type="button">💾 Guardar registro</button>
       <button class="btn btn-danger" id="btnBorrarTodo" type="button">🗑️ Borrar TODO</button>
+      <button class="btn btn-ghost" id="btnNuevo" type="button">🧾 Nuevo</button>
       <span style="flex:1"></span>
       <button class="btn btn-warn" id="btnCSV" type="button">⬇️ CSV</button>
       <button class="btn btn-warn" id="btnXLSX" type="button">⬇️ XLSX</button>
@@ -1913,6 +1914,9 @@ function enableEnterNavigation(){
 
   $("#btnGuardar").addEventListener("click", saveForm);
   $("#btnBorrarTodo").addEventListener("click", wipeAll);
+  if($("#btnNuevo")){
+  $("#btnNuevo").addEventListener("click", clearForm);
+}
   $("#btnCSV").addEventListener("click", exportCSV);
   $("#btnXLSX").addEventListener("click", exportXLSX);
   $("#btnPPTX").addEventListener("click", exportPPTX);

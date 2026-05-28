@@ -1,0 +1,102 @@
+{
+  "ESTADISTICAS": {
+    "password": "ADMIN1",
+    "area": "ESTADISTICAS",
+    "rol": "ADMIN"
+  },
+  "PEP_BJ": {
+    "password": "BJ12345",
+    "area": "PEP_BJ",
+    "rol": "AREA"
+  },
+  "PEP_PLAYA": {
+    "password": "PLAYA12345",
+    "area": "PEP_PLAYA",
+    "rol": "AREA"
+  },
+  "PEP_TUL": {
+    "password": "CAMBIAR_CLAVE_PEP_TUL",
+    "area": "PEP_TUL",
+    "rol": "AREA"
+  },
+  "PEP_COZ": {
+    "password": "CAMBIAR_CLAVE_PEP_COZ",
+    "area": "PEP_COZ",
+    "rol": "AREA"
+  },
+  "PEP_OPB": {
+    "password": "CAMBIAR_CLAVE_PEP_OPB",
+    "area": "PEP_OPB",
+    "rol": "AREA"
+  },
+  "PEP_CAMINOS": {
+    "password": "CAMBIAR_CLAVE_PEP_CAMINOS",
+    "area": "PEP_CAMINOS",
+    "rol": "AREA"
+  },
+  "POLICIA RURAL": {
+    "password": "CAMBIAR_CLAVE_POLICIA_RURAL",
+    "area": "POLICIA RURAL",
+    "rol": "AREA"
+  },
+  "GPO_CENTURION": {
+    "password": "CAMBIAR_CLAVE_GPO_CENTURION",
+    "area": "GPO_CENTURION",
+    "rol": "AREA"
+  },
+  "GPO_ORION": {
+    "password": "CAMBIAR_CLAVE_GPO_ORION",
+    "area": "GPO_ORION",
+    "rol": "AREA"
+  },
+  "GPO_PDI": {
+    "password": "CAMBIAR_CLAVE_GPO_PDI",
+    "area": "GPO_PDI",
+    "rol": "AREA"
+  },
+  "GPO_JAGUAR": {
+    "password": "CAMBIAR_CLAVE_GPO_JAGUAR",
+    "area": "GPO_JAGUAR",
+    "rol": "AREA"
+  },
+  "MUN_FCP": {
+    "password": "CAMBIAR_CLAVE_MUN_FCP",
+    "area": "MUN_FCP",
+    "rol": "AREA"
+  },
+  "MUN_LC": {
+    "password": "CAMBIAR_CLAVE_MUN_LC",
+    "area": "MUN_LC",
+    "rol": "AREA"
+  },
+  "MUN_PLAYA": {
+    "password": "CAMBIAR_CLAVE_MUN_PLAYA",
+    "area": "MUN_PLAYA",
+    "rol": "AREA"
+  },
+  "MUN_TUL": {
+    "password": "CAMBIAR_CLAVE_MUN_TUL",
+    "area": "MUN_TUL",
+    "rol": "AREA"
+  },
+  "MUN_PM": {
+    "password": "CAMBIAR_CLAVE_MUN_PM",
+    "area": "MUN_PM",
+    "rol": "AREA"
+  },
+  "MUN_JMM": {
+    "password": "CAMBIAR_CLAVE_MUN_JMM",
+    "area": "MUN_JMM",
+    "rol": "AREA"
+  },
+  "MUN_IM": {
+    "password": "CAMBIAR_CLAVE_MUN_IM",
+    "area": "MUN_IM",
+    "rol": "AREA"
+  },
+  "MUN_COZ": {
+    "password": "CAMBIAR_CLAVE_MUN_COZ",
+    "area": "MUN_COZ",
+    "rol": "AREA"
+  }
+}

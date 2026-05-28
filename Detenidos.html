@@ -96,6 +96,23 @@
       border-color:#0d9488;
       box-shadow:0 0 0 2px rgba(13,148,136,.25);
     }
+    .sessionbar{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      justify-content:flex-end;
+      padding-right:14px;
+    }
+    .logoutbtn{
+      color:#fff;
+      text-decoration:none;
+      border:1px solid rgba(255,255,255,.35);
+      border-radius:12px;
+      padding:7px 10px;
+      font-size:12px;
+      font-weight:800;
+    }
+    .logoutbtn:hover{ background:rgba(255,255,255,.12); }
   </style>
 </head>
 
@@ -109,6 +126,10 @@
       <div class="title">DEPARTAMENTO DE ESTADISTICAS / C5 – Registro (IPH DETENIDOS)</div>
       <div class="sub">Observaciones</div>
     </div>
+  </div>
+  <div class="sessionbar">
+    <div class="badge" id="sessionBadge">Sesión...</div>
+    <a class="logoutbtn" href="/logout">Salir</a>
   </div>
   <div class="badge" id="statusBadge">Listo</div>
 </header>
@@ -145,7 +166,7 @@
             </div>
           </div>
           <small style="opacity:.8; display:block; margin-top:6px;">
-            Nota: estas imágenes se envían al servidor (PHP) para incrustarlas en el PPTX.
+            Nota: estas imágenes se envían al servidor Flask/Python para incrustarlas en el PPTX.
           </small>
         </div>
 
@@ -406,9 +427,10 @@
 </div>
 
 <script>
-const STORAGE_KEY = "iph_registros_ssc_v1";
+const STORAGE_KEY = "servidor_filtrado_por_area";
 const PPTX_ENDPOINT = "generar_pptx";
 const ZIP_ENDPOINT  = "generar_pptx_zip";
+let USUARIO_ACTUAL = null;
 
 const EXCEL_SECTORES_PATH = "data/data_colonias_sectores.xlsx";
 
@@ -467,6 +489,59 @@ function setStatus(msg, tone="ok"){
   el.style.background = tone==="bad" ? "rgba(185,28,28,.18)" : "rgba(0,139,131,.12)";
   el.style.borderColor = tone==="bad" ? "rgba(185,28,28,.35)" : "rgba(0,139,131,.25)";
   el.style.color = tone==="bad" ? "#fecaca" : "var(--teal)";
+}
+
+async function cargarSesionActual(){
+  try{
+    const res = await fetch("/api/sesion");
+    if(!res.ok){
+      window.location.href = "/login";
+      return;
+    }
+
+    USUARIO_ACTUAL = await res.json();
+
+    const badge = document.getElementById("sessionBadge");
+    if(badge){
+      const area = USUARIO_ACTUAL.area || "S/D";
+      const rol = USUARIO_ACTUAL.rol || "";
+      badge.textContent = `Área: ${area} | ${rol}`;
+    }
+
+    aplicarRestriccionArea();
+  }catch(err){
+    console.warn("No se pudo leer la sesión:", err);
+    window.location.href = "/login";
+  }
+}
+
+function aplicarRestriccionArea(){
+  if(!USUARIO_ACTUAL) return;
+
+  const sel = document.querySelector('select[name="id_operativo"]');
+  if(!sel) return;
+
+  if(USUARIO_ACTUAL.rol === "ADMIN"){
+    sel.style.pointerEvents = "auto";
+    sel.style.background = "";
+    sel.title = "ESTADISTICAS puede seleccionar cualquier área.";
+    return;
+  }
+
+  const area = USUARIO_ACTUAL.area || "";
+  if(area){
+    sel.value = area;
+    sel.style.pointerEvents = "none";
+    sel.style.background = "#eef2ff";
+    sel.title = "Bloqueado por sesión: solo puedes capturar con tu área.";
+
+    if(!sel.dataset.areaLock){
+      sel.addEventListener("change", () => {
+        sel.value = area;
+      });
+      sel.dataset.areaLock = "1";
+    }
+  }
 }
 
 function fillSelect(selectEl, arr){
@@ -1438,6 +1513,8 @@ async function loadIntoForm(index){
 
   });
 
+  aplicarRestriccionArea();
+
   marcarSectorComoManual(
     !!(
       r.sector &&
@@ -1492,6 +1569,7 @@ async function deleteAt(index){
 
 function clearForm(){
   $("#formIPH").reset();
+  aplicarRestriccionArea();
   clearMapMarker();
   marcarSectorComoManual(false);
   quitarColoniasMunicipio();
@@ -1830,6 +1908,8 @@ function enableEnterNavigation(){
   fillSelect(document.querySelector('select[name="nombre_operativo"]'), OPERATIVOS);
   fillSelect(document.querySelector('select[name="presentado_autoridad"]'), AUTORIDADES);
   fillSelect(document.querySelector('select[name="hecho"]'), HECHOS);
+
+  cargarSesionActual();
 
   $("#btnGuardar").addEventListener("click", saveForm);
   $("#btnBorrarTodo").addEventListener("click", wipeAll);

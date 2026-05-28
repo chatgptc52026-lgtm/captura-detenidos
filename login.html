@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Acceso | Registro IPH</title>
+  <style>
+    :root{
+      --bg:#0f172a;
+      --card:#ffffff;
+      --text:#111827;
+      --mut:#6b7280;
+      --teal:#008b83;
+      --line:#e5e7eb;
+      --bad:#b91c1c;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family:Arial, sans-serif;
+      background:linear-gradient(135deg,#0f172a,#0b2d4d);
+      padding:20px;
+    }
+    .card{
+      width:100%;
+      max-width:430px;
+      background:var(--card);
+      border-radius:22px;
+      box-shadow:0 24px 60px rgba(0,0,0,.25);
+      padding:28px;
+    }
+    .logo{
+      width:58px;
+      height:58px;
+      border-radius:18px;
+      background:rgba(0,139,131,.12);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--teal);
+      font-size:28px;
+      margin-bottom:16px;
+    }
+    h1{
+      margin:0 0 6px;
+      color:var(--text);
+      font-size:24px;
+    }
+    p{
+      margin:0 0 22px;
+      color:var(--mut);
+      line-height:1.45;
+      font-size:14px;
+    }
+    label{
+      display:block;
+      font-size:13px;
+      font-weight:700;
+      color:#374151;
+      margin-bottom:7px;
+    }
+    select,input{
+      width:100%;
+      padding:12px 13px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      font-size:14px;
+      outline:none;
+      margin-bottom:15px;
+    }
+    select:focus,input:focus{
+      border-color:var(--teal);
+      box-shadow:0 0 0 3px rgba(0,139,131,.18);
+    }
+    button{
+      width:100%;
+      border:0;
+      border-radius:13px;
+      padding:13px 14px;
+      font-size:15px;
+      font-weight:800;
+      color:#fff;
+      background:var(--teal);
+      cursor:pointer;
+    }
+    button:hover{filter:brightness(.96)}
+    .error{
+      background:rgba(185,28,28,.1);
+      border:1px solid rgba(185,28,28,.25);
+      color:var(--bad);
+      border-radius:12px;
+      padding:10px 12px;
+      margin-bottom:15px;
+      font-size:13px;
+      font-weight:700;
+    }
+    .hint{
+      margin-top:14px;
+      font-size:12px;
+      color:var(--mut);
+      text-align:center;
+    }
+  </style>
+</head>
+<body>
+  <form class="card" method="POST" action="/login" autocomplete="off">
+    <div class="logo">🔐</div>
+    <h1>Acceso al sistema</h1>
+    <p>Ingresa con el usuario del área correspondiente. Cada área visualizará únicamente sus registros; ESTADISTICAS tendrá acceso total.</p>
+
+    {% if error %}
+      <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <label for="usuario">Área / usuario</label>
+    <select id="usuario" name="usuario" required>
+      <option value="" selected disabled>Selecciona…</option>
+      {% for usuario in usuarios %}
+        <option value="{{ usuario }}">{{ usuario }}</option>
+      {% endfor %}
+    </select>
+
+    <label for="password">Contraseña</label>
+    <input id="password" name="password" type="password" required placeholder="Contraseña del área" />
+
+    <button type="submit">Entrar</button>
+    <div class="hint">Contraseñas administradas por ESTADISTICAS.</div>
+  </form>
+</body>
+</html>

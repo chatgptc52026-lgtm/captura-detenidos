@@ -336,8 +336,6 @@
 
     <div class="actions">
       <button class="btn btn-primary" id="btnGuardar" type="button">💾 Guardar registro</button>
-      <button class="btn btn-ghost" id="btnNuevo" type="button">🧾 Nuevo</button>
-      <button class="btn btn-dark" id="btnEliminarUltimo" type="button">↩️ Eliminar último</button>
       <button class="btn btn-danger" id="btnBorrarTodo" type="button">🗑️ Borrar TODO</button>
       <span style="flex:1"></span>
       <button class="btn btn-warn" id="btnCSV" type="button">⬇️ CSV</button>
@@ -533,6 +531,21 @@ function nowStamp(){
   const d = new Date();
   const pad=(n)=> String(n).padStart(2,"0");
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
+}
+
+function formatoFechaMX(fecha){
+
+  if(!fecha) return "";
+
+  const partes = fecha.split("-");
+
+  if(partes.length === 3){
+
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+
+  }
+
+  return fecha;
 }
 
 function normalizarTexto(texto){
@@ -1381,7 +1394,7 @@ async function render(){
       td(r.folio_iph),
       td(r.municipio),
       td(r.id_operativo),
-      td(r.fecha),
+      td(formatoFechaMX(r.fecha)),
       td(`${(r.nombre||"").trim()} ${(r.ap_paterno||"").trim()} ${(r.ap_materno||"").trim()}`.trim()),
       td(r.rnd),
       td(r.hecho),
@@ -1819,8 +1832,6 @@ function enableEnterNavigation(){
   fillSelect(document.querySelector('select[name="hecho"]'), HECHOS);
 
   $("#btnGuardar").addEventListener("click", saveForm);
-  $("#btnNuevo").addEventListener("click", clearForm);
-  $("#btnEliminarUltimo").addEventListener("click", deleteLast);
   $("#btnBorrarTodo").addEventListener("click", wipeAll);
   $("#btnCSV").addEventListener("click", exportCSV);
   $("#btnXLSX").addEventListener("click", exportXLSX);
@@ -1900,6 +1911,11 @@ function enableEnterNavigation(){
   });
 
   map = L.map("map").setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+  setTimeout(() => {
+
+  map.invalidateSize();
+
+}, 300);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,

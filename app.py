@@ -204,6 +204,7 @@ def limpiar_nombre(texto):
 
 
 def formato_fecha_mx(fecha):
+
     if not fecha:
         return ""
 
@@ -213,6 +214,16 @@ def formato_fecha_mx(fecha):
         return f"{partes[2]}/{partes[1]}/{partes[0]}"
 
     return str(fecha)
+
+def obtener_delito(data):
+    delito = (
+        data.get("motivo_detencion_1", "")
+        or data.get("motivo_detencion1", "")
+        or data.get("motivo_detencion", "")
+        or ""
+    )
+
+    return str(delito).strip()
 
 
 def construir_reemplazos(data):
@@ -224,7 +235,7 @@ def construir_reemplazos(data):
 
     return {
         "<FECHA>": formato_fecha_mx(data.get("fecha", "")),
-        "<DELITO>": data.get("hecho", ""),
+        "<DELITO>": obtener_delito(data),
         "<DETENIDO>": detenido,
         "<EDAD>": data.get("edad", ""),
         "<ALIAS>": data.get("alias", ""),

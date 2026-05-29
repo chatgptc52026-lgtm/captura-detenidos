@@ -1,0 +1,7 @@
+para actualizar contraseñas en render
+
+abres el cmd sobre la carpeta
+y coloca este mando en el cmd:
+git add usuarios.json
+git commit -m "actualiza contraseña de PEP_TUL"  -----> depende el ID ha actulizar
+git push
